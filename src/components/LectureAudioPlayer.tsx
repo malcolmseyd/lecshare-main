@@ -15,7 +15,7 @@ const pauseURL = 'http://localhost:4000/pause'
 const sliderURL = 'http://localhost:4000/shiftSlider'
 const connectURL = 'http://localhost:4000/connect'
 
-const stateURL = 'http://localhost:4000/data/appState.json'
+const stateURL = 'http://localhost:4000/getState'
 
 interface AudioPlayerProps {
     value?: number
@@ -62,12 +62,12 @@ export default function LectureAudioPlayer(props: AudioPlayerProps) {
     React.useEffect(() => {
         // runs on component mount
         requestRef.current = requestAnimationFrame(animate);
-
+        
         Axios.post(connectURL, {}).then(response => {
             console.log(response.data)
         })
 
-        
+        setInterval(updateState, 5000);
 
         return () => {
             // dismount
@@ -121,7 +121,13 @@ export default function LectureAudioPlayer(props: AudioPlayerProps) {
     }
 
     const handleValueCommit = (e: any, value: any) => {
+        const time = seek()
         if(value as number){
+            Axios.post(pauseURL, {
+                playbackTime: value as number,
+                playbackState: true
+            })
+
             howler.seek(value as number);
             if(!playing){
                 howler.play();
@@ -131,10 +137,7 @@ export default function LectureAudioPlayer(props: AudioPlayerProps) {
         setIsSliding(false);
         requestRef.current = requestAnimationFrame(animate);
 
-        Axios.post(sliderURL, {
-            playbackTime: value as number,
-            playbackState: true,
-        })
+        
     }
 
     const handlePlaying = () => {
@@ -144,14 +147,18 @@ export default function LectureAudioPlayer(props: AudioPlayerProps) {
             setPlaying(false);
 
             Axios.post(pauseURL, {
-                playbackTime: time
+                playbackTime: time,
+                playbackState: false
             })
         } else {
             howler.play();
             setPlaying(true);
 
             // It's a get since we won't desync while paused.
-            Axios.get(playURL, {})
+            Axios.post(pauseURL, {
+                playbackTime: time,
+                playbackState: true
+            })
         }
         
         setLabels(time)
@@ -161,13 +168,10 @@ export default function LectureAudioPlayer(props: AudioPlayerProps) {
         Axios.get(stateURL, {}).then(response => {
             const data = response.data();
             setPlaying(data['playing'] as boolean);
-            // If desynced by > 5 seconds, update it.
-            if (seek() - (data['currentTime'] as number) > 5){
-                howler.seek(data['currentTime'] as number)
-            }
             if (sliderHead != data['sliderHead'] as number) {
                 setSliderHead(data['sliderHead'] as number);
             }
+            console.log(data)
         });
     }
     
