@@ -1,3 +1,7 @@
+Note: this is a fork make for UVec 2019, so it is not up to date. To see the current version, [head here](https://github.com/VikeLabs/lecshare-main).
+
+---
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 Ensure that you have node(and npm) installed before proceeding with the rest of setup. Typing npm into console will confirm your installation.
